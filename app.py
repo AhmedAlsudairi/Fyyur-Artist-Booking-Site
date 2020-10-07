@@ -12,6 +12,7 @@ import logging
 from logging import Formatter, FileHandler
 from flask_wtf import Form
 from forms import *
+from flask_migrate import Migrate
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
@@ -19,13 +20,21 @@ from forms import *
 app = Flask(__name__)
 moment = Moment(app)
 app.config.from_object('config')
+
 db = SQLAlchemy(app)
 
+migrate = Migrate(app, db)
 # TODO: connect to a local postgresql database
-
+app.config['SQLALCHEMY_DATABASE_URI']='postgres://postgres:admin@localhost:5432/Fyyur'
 #----------------------------------------------------------------------------#
 # Models.
 #----------------------------------------------------------------------------#
+
+venue_artists = db.Table('venue_artists',
+db.Column('venue_id',db.Integer, db.ForeignKey('Venue.id'), primary_key=True),
+db.Column('artist_id',db.Integer, db.ForeignKey('Artist.id'), primary_key=True),
+db.Column('start_time',db.DateTime)
+)
 
 class Venue(db.Model):
     __tablename__ = 'Venue'
@@ -36,9 +45,10 @@ class Venue(db.Model):
     state = db.Column(db.String(120))
     address = db.Column(db.String(120))
     phone = db.Column(db.String(120))
+    genres = db.Column(db.String(120))
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
-
+    artists = db.relationship('Artist', secondary= venue_artists, backref = db.backref('venues', lazy=True))
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
 class Artist(db.Model):
@@ -512,6 +522,7 @@ if not app.debug:
 
 # Default port:
 if __name__ == '__main__':
+    app.debug = True
     app.run()
 
 # Or specify port manually:
