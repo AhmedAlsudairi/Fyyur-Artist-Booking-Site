@@ -175,7 +175,7 @@ def show_venue(venue_id):
   i=0
   j=0
   for show in shows:
-    artist = Artist.query.get(show.artist_id)
+    artist = db.session.query(Artist).join(Show).filter_by(artist_id=show.artist_id).first()
     date_time = show.start_time.strftime("%Y-%m-%d %H:%M:%S")
     record={
       "artist_id": artist.id,
@@ -327,7 +327,7 @@ def show_artist(artist_id):
   i=0
   j=0
   for show in shows:
-    venue = Venue.query.get(show.venue_id)
+    venue = db.session.query(Venue).join(Show).filter_by(venue_id=show.venue_id).first()
     date_time = show.start_time.strftime("%Y-%m-%d %H:%M:%S")
     record={
       "venue_id": venue.id,
