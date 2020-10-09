@@ -8,6 +8,7 @@ import babel
 from flask import Flask, render_template, request, Response, flash, redirect, url_for
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import ARRAY , String
 import logging
 from logging import Formatter, FileHandler
 from flask_wtf import Form
@@ -48,7 +49,7 @@ class Venue(db.Model):
     state = db.Column(db.String(120))
     address = db.Column(db.String(120))
     phone = db.Column(db.String(120))
-    genres = db.Column(db.String(120))
+    genres = db.Column(ARRAY(String))
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
     website = db.Column(db.String(120))
@@ -65,7 +66,7 @@ class Artist(db.Model):
     city = db.Column(db.String(120))
     state = db.Column(db.String(120))
     phone = db.Column(db.String(120))
-    genres = db.Column(db.String(120))
+    genres = db.Column(ARRAY(String))
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
     website = db.Column(db.String(120))
@@ -216,14 +217,15 @@ def create_venue_submission():
     city = request.form.get('city', '')
     state = request.form.get('state', '')
     address = request.form.get('address', '')
-    phone = request.form.get('phone', '')
+    phone = request.form.get('phone')
     image_link = request.form.get('image_link', '')
-    genres = request.form.get('genres', '')
+    genres = request.form.getlist('genres')
     facebook_link = request.form.get('facebook_link', '')
     website = request.form.get('website', '')
-    seeking_talent = request.form.get('seeking_talent', '')
+    seeking_talent = request.form.get('seeking_talent') == 'True'
     seeking_describtion = request.form.get('seeking_describtion', '')
-    print(seeking_talent)
+
+    print(genres)
     venue = Venue(name=name, city=city, state=state, address=address, phone=phone, image_link=image_link, genres=genres, facebook_link=facebook_link, website=website, seeking_talent=seeking_talent, seeking_describtion=seeking_describtion)
     db.session.add(venue)
     db.session.commit()
@@ -381,10 +383,10 @@ def edit_artist_submission(artist_id):
     state = request.form.get('state', '')
     phone = request.form.get('phone', '')
     image_link = request.form.get('image_link', '')
-    genres = request.form.get('genres', '')
+    genres = request.form.getlist('genres')
     facebook_link = request.form.get('facebook_link', '')
     website = request.form.get('website', '')
-    seeking_talent = request.form.get('seeking_talent', '')
+    seeking_talent = request.form.get('seeking_talent') == 'True'
     seeking_describtion = request.form.get('seeking_describtion', '')
 
     artist.name = name
@@ -443,10 +445,10 @@ def edit_venue_submission(venue_id):
     address = request.form.get('address', '')
     phone = request.form.get('phone', '')
     image_link = request.form.get('image_link', '')
-    genres = request.form.get('genres', '')
+    genres = request.form.getlist('genres')
     facebook_link = request.form.get('facebook_link', '')
     website = request.form.get('website', '')
-    seeking_talent = request.form.get('seeking_talent', '')
+    seeking_talent = request.form.get('seeking_talent') == 'True'
     seeking_describtion = request.form.get('seeking_describtion', '')
 
     venue.name = name
@@ -492,10 +494,10 @@ def create_artist_submission():
     state = request.form.get('state', '')
     phone = request.form.get('phone', '')
     image_link = request.form.get('image_link', '')
-    genres = request.form.get('genres', '')
+    genres = request.form.getlist('genres')
     facebook_link = request.form.get('facebook_link', '')
     website = request.form.get('website', '')
-    seeking_talent = request.form.get('seeking_talent', '')
+    seeking_talent = request.form.get('seeking_talent') == 'True'
     seeking_describtion = request.form.get('seeking_describtion', '')
 
     artist = Artist(name=name, city=city, state=state, phone=phone, image_link=image_link, genres=genres, facebook_link=facebook_link, website=website, seeking_talent=seeking_talent, seeking_describtion=seeking_describtion)
