@@ -35,42 +35,42 @@ app.config['SQLALCHEMY_DATABASE_URI']='postgres://postgres:admin@localhost:5432/
 class Show(db.Model):
     __tablename__ = 'Show'
 
-    venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), primary_key=True)
-    artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id'), primary_key=True)
+    venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), primary_key=True, nullable=False)
+    artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id'), primary_key=True, nullable=False)
     start_time = db.Column(db.DateTime, nullable=False)
 
 class Venue(db.Model):
     __tablename__ = 'Venue'
 
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    city = db.Column(db.String(120))
-    state = db.Column(db.String(120))
-    address = db.Column(db.String(120))
-    phone = db.Column(db.String(120))
-    genres = db.Column(db.ARRAY(db.String))
-    image_link = db.Column(db.String(500))
-    facebook_link = db.Column(db.String(120))
-    website = db.Column(db.String(120))
-    seeking_talent = db.Column(db.Boolean , default=False)
-    seeking_describtion = db.Column(db.String(500))
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    name = db.Column(db.String, unique=True, nullable=False)
+    city = db.Column(db.String(120), nullable=False)
+    state = db.Column(db.String(120), nullable=False)
+    address = db.Column(db.String(120), nullable=False)
+    phone = db.Column(db.String(120), nullable=False)
+    genres = db.Column(db.ARRAY(db.String), nullable=False)
+    image_link = db.Column(db.String(500), nullable=False)
+    facebook_link = db.Column(db.String(120), nullable=False)
+    website = db.Column(db.String(120), nullable=False)
+    seeking_talent = db.Column(db.Boolean , default=False, nullable=False)
+    seeking_describtion = db.Column(db.String(500), nullable=False)
     shows = db.relationship('Show', backref = db.backref('venue', lazy=True))
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
 class Artist(db.Model):
     __tablename__ = 'Artist'
 
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    city = db.Column(db.String(120))
-    state = db.Column(db.String(120))
-    phone = db.Column(db.String(120))
-    genres = db.Column(db.ARRAY(db.String))
-    image_link = db.Column(db.String(500))
-    facebook_link = db.Column(db.String(120))
-    website = db.Column(db.String(120))
-    seeking_talent = db.Column(db.Boolean , default=False)
-    seeking_describtion = db.Column(db.String(500))
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    name = db.Column(db.String , unique=True, nullable=False)
+    city = db.Column(db.String(120), nullable=False)
+    state = db.Column(db.String(120), nullable=False)
+    phone = db.Column(db.String(120), nullable=False)
+    genres = db.Column(db.ARRAY(db.String), nullable=False)
+    image_link = db.Column(db.String(500), nullable=False)
+    facebook_link = db.Column(db.String(120), nullable=False)
+    website = db.Column(db.String(120), nullable=False)
+    seeking_talent = db.Column(db.Boolean , default=False, nullable=False)
+    seeking_describtion = db.Column(db.String(500), nullable=False)
     shows = db.relationship('Show', backref = db.backref('artist', lazy=True))
 
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
@@ -109,21 +109,31 @@ def venues():
   #       num_shows should be aggregated based on number of upcoming shows per venue.
   
   data=[]
-  venues = Venue.query.all()
+  venues = Venue.query.group_by(Venue.id,Venue.state,Venue.city).all()
+  venue_city_state = ''
   i = 0
   for venue in venues:
-    num_shows = Show.query.filter_by(venue_id=venue.id).count()
-    record =  {
-    "city": venue.city,
-    "state": venue.state,
-    "venues": [{
-      "id": venue.id,
-      "name": venue.name,
-      "num_upcoming_shows": num_shows,
-    }]
-  }
-    data.insert(i, record)
-    i=i+1
+    if venue_city_state != venue.city + ',' + venue.state:
+      venue_city_state = venue.city + ',' + venue.state
+      num_shows = Show.query.filter_by(venue_id=venue.id).count()
+      record =  {
+      "city": venue.city,
+      "state": venue.state,
+      "venues": [{
+        "id": venue.id,
+        "name": venue.name,
+        "num_upcoming_shows": num_shows,
+      }]
+    }
+      data.insert(i, record)
+      i=i+1
+    else:
+      record["venues"].append({
+        "id": venue.id,
+        "name": venue.name,
+        "num_upcoming_shows": num_shows,
+      })
+    
 
   return render_template('pages/venues.html', areas=data)
 
@@ -212,19 +222,19 @@ def create_venue_submission():
   # TODO: insert form data as a new Venue record in the db, instead
   # TODO: modify data to be the data object returned from db insertion
   try:
-    name = request.form.get('name', '')
-    city = request.form.get('city', '')
-    state = request.form.get('state', '')
-    address = request.form.get('address', '')
+    name = request.form.get('name')
+    city = request.form.get('city')
+    state = request.form.get('state')
+    address = request.form.get('address')
     phone = request.form.get('phone')
-    image_link = request.form.get('image_link', '')
+    image_link = request.form.get('image_link')
     genres = request.form.getlist('genres')
-    facebook_link = request.form.get('facebook_link', '')
-    website = request.form.get('website', '')
+    facebook_link = request.form.get('facebook_link')
+    website = request.form.get('website')
     seeking_talent = request.form.get('seeking_talent') == 'True'
-    seeking_describtion = request.form.get('seeking_describtion', '')
+    seeking_describtion = request.form.get('seeking_describtion')
 
-    print(genres)
+    
     venue = Venue(name=name, city=city, state=state, address=address, phone=phone, image_link=image_link, genres=genres, facebook_link=facebook_link, website=website, seeking_talent=seeking_talent, seeking_describtion=seeking_describtion)
     db.session.add(venue)
     db.session.commit()
@@ -377,16 +387,16 @@ def edit_artist_submission(artist_id):
 
   artist = Artist.query.get(artist_id)
   try:
-    name = request.form.get('name', '')
-    city = request.form.get('city', '')
-    state = request.form.get('state', '')
-    phone = request.form.get('phone', '')
-    image_link = request.form.get('image_link', '')
+    name = request.form.get('name')
+    city = request.form.get('city')
+    state = request.form.get('state')
+    phone = request.form.get('phone')
+    image_link = request.form.get('image_link')
     genres = request.form.getlist('genres')
-    facebook_link = request.form.get('facebook_link', '')
-    website = request.form.get('website', '')
+    facebook_link = request.form.get('facebook_link')
+    website = request.form.get('website')
     seeking_talent = request.form.get('seeking_talent') == 'True'
-    seeking_describtion = request.form.get('seeking_describtion', '')
+    seeking_describtion = request.form.get('seeking_describtion')
 
     artist.name = name
     artist.city = city
@@ -438,17 +448,17 @@ def edit_venue_submission(venue_id):
   # venue record with ID <venue_id> using the new attributes
   venue = Venue.query.get(venue_id)
   try:
-    name = request.form.get('name', '')
-    city = request.form.get('city', '')
-    state = request.form.get('state', '')
-    address = request.form.get('address', '')
-    phone = request.form.get('phone', '')
-    image_link = request.form.get('image_link', '')
+    name = request.form.get('name')
+    city = request.form.get('city')
+    state = request.form.get('state')
+    address = request.form.get('address')
+    phone = request.form.get('phone')
+    image_link = request.form.get('image_link')
     genres = request.form.getlist('genres')
-    facebook_link = request.form.get('facebook_link', '')
-    website = request.form.get('website', '')
+    facebook_link = request.form.get('facebook_link')
+    website = request.form.get('website')
     seeking_talent = request.form.get('seeking_talent') == 'True'
-    seeking_describtion = request.form.get('seeking_describtion', '')
+    seeking_describtion = request.form.get('seeking_describtion')
 
     venue.name = name
     venue.city = city
@@ -488,16 +498,16 @@ def create_artist_submission():
   # TODO: insert form data as a new Venue record in the db, instead
   # TODO: modify data to be the data object returned from db insertion
   try:
-    name = request.form.get('name', '')
-    city = request.form.get('city', '')
-    state = request.form.get('state', '')
-    phone = request.form.get('phone', '')
-    image_link = request.form.get('image_link', '')
+    name = request.form.get('name')
+    city = request.form.get('city')
+    state = request.form.get('state')
+    phone = request.form.get('phone')
+    image_link = request.form.get('image_link')
     genres = request.form.getlist('genres')
-    facebook_link = request.form.get('facebook_link', '')
-    website = request.form.get('website', '')
+    facebook_link = request.form.get('facebook_link')
+    website = request.form.get('website')
     seeking_talent = request.form.get('seeking_talent') == 'True'
-    seeking_describtion = request.form.get('seeking_describtion', '')
+    seeking_describtion = request.form.get('seeking_describtion')
 
     artist = Artist(name=name, city=city, state=state, phone=phone, image_link=image_link, genres=genres, facebook_link=facebook_link, website=website, seeking_talent=seeking_talent, seeking_describtion=seeking_describtion)
     db.session.add(artist)
