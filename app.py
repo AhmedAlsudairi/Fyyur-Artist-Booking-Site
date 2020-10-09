@@ -68,6 +68,9 @@ class Artist(db.Model):
     genres = db.Column(db.String(120))
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
+    website = db.Column(db.String(120))
+    seeking_talent = db.Column(db.Boolean , default=False)
+    seeking_describtion = db.Column(db.String(500))
     shows = db.relationship('Show', backref = db.backref('artist', lazy=True))
 
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
@@ -316,12 +319,6 @@ def show_artist(artist_id):
     venue = Venue.query.get(show.venue_id)
     date_time = show.start_time.strftime("%Y-%m-%d %H:%M:%S")
     record={
-      "artist_id": artist.id,
-      "artist_name": artist.name,
-      "artist_image_link": artist.image_link,
-      "start_time": date_time
-    }
-    {
       "venue_id": venue.id,
       "venue_name": venue.name,
       "venue_image_link": venue.image_link,
@@ -341,7 +338,7 @@ def show_artist(artist_id):
     "city": artist.city,
     "state": artist.state,
     "phone": artist.phone,
-    "seeking_venue": False,
+    "seeking_venue": artist.seeking_talent,
     "image_link": artist.image_link,
     "past_shows": past_shows,
     "upcoming_shows": upcoming_shows,
@@ -363,10 +360,10 @@ def edit_artist(artist_id):
     "city": artistRecord.city,
     "state": artistRecord.state,
     "phone": artistRecord.phone,
-    "website": "https://www.gunsnpetalsband.com",
+    "website": artistRecord.website,
     "facebook_link": artistRecord.facebook_link,
-    "seeking_venue": True,
-    "seeking_description": "Looking for shows to perform at in the San Francisco Bay Area!",
+    "seeking_venue": artistRecord.seeking_talent,
+    "seeking_description": artistRecord.seeking_describtion,
     "image_link": artistRecord.image_link
   }
   # TODO: populate form with fields from artist with ID <artist_id>
@@ -386,7 +383,10 @@ def edit_artist_submission(artist_id):
     image_link = request.form.get('image_link', '')
     genres = request.form.get('genres', '')
     facebook_link = request.form.get('facebook_link', '')
-    
+    website = request.form.get('website', '')
+    seeking_talent = request.form.get('seeking_talent', '')
+    seeking_describtion = request.form.get('seeking_describtion', '')
+
     artist.name = name
     artist.city = city
     artist.state = state
@@ -394,7 +394,10 @@ def edit_artist_submission(artist_id):
     artist.image_link = image_link
     artist.genres = genres
     artist.facebook_link = facebook_link
-    
+    artist.website = website
+    artist.seeking_talent = seeking_talent
+    artist.seeking_describtion = seeking_describtion
+
     db.session.commit()
     flash('Artist ' + request.form['name'] + ' was successfully updated!')
 
@@ -419,10 +422,10 @@ def edit_venue(venue_id):
     "city": venueRecord.city,
     "state": venueRecord.state,
     "phone": venueRecord.phone,
-    "website": "https://www.themusicalhop.com",
+    "website": venueRecord.website,
     "facebook_link": venueRecord.facebook_link,
-    "seeking_talent": True,
-    "seeking_description": "We are on the lookout for a local artist to play every two weeks. Please call us.",
+    "seeking_talent": venueRecord.seeking_talent,
+    "seeking_description": venueRecord.seeking_describtion,
     "image_link": venueRecord.image_link
   }
   # TODO: populate form with values from venue with ID <venue_id>
@@ -442,7 +445,10 @@ def edit_venue_submission(venue_id):
     image_link = request.form.get('image_link', '')
     genres = request.form.get('genres', '')
     facebook_link = request.form.get('facebook_link', '')
-    
+    website = request.form.get('website', '')
+    seeking_talent = request.form.get('seeking_talent', '')
+    seeking_describtion = request.form.get('seeking_describtion', '')
+
     venue.name = name
     venue.city = city
     venue.state = state
@@ -451,7 +457,10 @@ def edit_venue_submission(venue_id):
     venue.image_link = image_link
     venue.genres = genres
     venue.facebook_link = facebook_link
-    
+    venue.website = website
+    venue.seeking_talent = seeking_talent
+    venue.seeking_describtion = seeking_describtion
+
     db.session.commit()
     flash('Venue ' + request.form['name'] + ' was successfully updated!')
 
@@ -485,7 +494,11 @@ def create_artist_submission():
     image_link = request.form.get('image_link', '')
     genres = request.form.get('genres', '')
     facebook_link = request.form.get('facebook_link', '')
-    artist = Artist(name=name, city=city, state=state, phone=phone, image_link=image_link, genres=genres, facebook_link=facebook_link)
+    website = request.form.get('website', '')
+    seeking_talent = request.form.get('seeking_talent', '')
+    seeking_describtion = request.form.get('seeking_describtion', '')
+
+    artist = Artist(name=name, city=city, state=state, phone=phone, image_link=image_link, genres=genres, facebook_link=facebook_link, website=website, seeking_talent=seeking_talent, seeking_describtion=seeking_describtion)
     db.session.add(artist)
     db.session.commit()
     # on successful db insert, flash success
