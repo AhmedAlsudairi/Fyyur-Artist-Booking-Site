@@ -51,6 +51,9 @@ class Venue(db.Model):
     genres = db.Column(db.String(120))
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
+    website = db.Column(db.String(120))
+    seeking_talent = db.Column(db.Boolean , default=False)
+    seeking_describtion = db.Column(db.String(500))
     shows = db.relationship('Show', backref = db.backref('venue', lazy=True))
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
@@ -181,9 +184,9 @@ def show_venue(venue_id):
     "city": venue.city,
     "state": venue.state,
     "phone": venue.phone,
-    "website": "https://www.parksquarelivemusicandcoffee.com",
+    "website": venue.website,
     "facebook_link": venue.facebook_link,
-    "seeking_talent": False,
+    "seeking_talent": venue.seeking_talent,
     "image_link": venue.image_link,
     "past_shows": past_shows,
     "upcoming_shows": upcoming_shows,
@@ -214,7 +217,11 @@ def create_venue_submission():
     image_link = request.form.get('image_link', '')
     genres = request.form.get('genres', '')
     facebook_link = request.form.get('facebook_link', '')
-    venue = Venue(name=name, city=city, state=state, address=address, phone=phone, image_link=image_link, genres=genres, facebook_link=facebook_link)
+    website = request.form.get('website', '')
+    seeking_talent = request.form.get('seeking_talent', '')
+    seeking_describtion = request.form.get('seeking_describtion', '')
+    print(seeking_talent)
+    venue = Venue(name=name, city=city, state=state, address=address, phone=phone, image_link=image_link, genres=genres, facebook_link=facebook_link, website=website, seeking_talent=seeking_talent, seeking_describtion=seeking_describtion)
     db.session.add(venue)
     db.session.commit()
     # on successful db insert, flash success
